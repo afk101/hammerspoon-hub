@@ -1,4 +1,5 @@
 local Text = require("packages.utils.text")
+local Env = require("packages.utils.env")
 local M = {}
 
 -- 从剪切板获取文件路径的核心函数
@@ -46,6 +47,29 @@ function M.get_file_path_from_clipboard()
                    return Text.unescape(parts.path)
                end
           end
+      end
+  end
+
+  -- 方法 3: 检查剪切板是否包含图像
+  -- 当使用截图工具截图并直接复制到剪切板时，剪切板中包含的是图像数据
+  local image = hs.pasteboard.readImage()
+  if image then
+      -- 加载环境变量
+      local env = Env.loadEnv()
+      -- 生成临时文件路径
+      -- 优先使用 .env 配置，其次是系统环境变量，最后默认 /tmp/
+      local temp_dir = env["TMPDIR"] or os.getenv("TMPDIR") or "/tmp/"
+      -- 确保路径以 / 结尾
+      if string.sub(temp_dir, -1) ~= "/" then
+          temp_dir = temp_dir .. "/"
+      end
+
+      local file_name = "upload_screenshot_" .. os.time() .. ".png"
+      local file_path = temp_dir .. file_name
+
+      -- 将图像保存为临时文件
+      if image:saveToFile(file_path) then
+          return file_path
       end
   end
 
