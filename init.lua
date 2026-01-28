@@ -1,1 +1,1 @@
-require("packages.upload.index")
+require("packages.upload")
