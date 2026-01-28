@@ -1,1 +1,1 @@
-require('demo')
+require("packages.upload.index")
