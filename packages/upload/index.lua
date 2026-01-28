@@ -1,4 +1,5 @@
 local M = {}
+local Utils = require("packages.utils")
 
 -- 辅助函数：将十六进制转换为字符
 local function hex_to_char(x)
@@ -62,83 +63,10 @@ local function get_file_path_from_clipboard()
   return nil
 end
 
--- 辅助函数：读取 .env 文件配置
-local function loadEnv()
-  local env = {}
-  local envFile = hs.configdir .. "/.env"
-  local f = io.open(envFile, "r")
-  if f then
-    for line in f:lines() do
-      -- 忽略注释和空行
-      if not line:match("^%s*#") and line:match("=") then
-        local key, value = line:match("([^=]+)=(.*)")
-        if key and value then
-          -- 去除可能存在的空白字符和引号
-          key = key:match("^%s*(.-)%s*$")
-          value = value:match("^%s*(.-)%s*$")
-          env[key] = value
-        end
-      end
-    end
-    f:close()
-  end
-  return env
-end
-
--- 查找系统中 Node.js 可执行文件的路径
-local function findNodePath()
-    -- 1. 优先尝试从 .env 文件读取 NODE_PATH
-    local env = loadEnv()
-    if env["NODE_PATH"] and hs.fs.attributes(env["NODE_PATH"]) then
-        return env["NODE_PATH"]
-    end
-
-    -- 2. 尝试常见的默认路径
-    local paths = {
-        "/usr/local/bin/node",                               -- Intel Mac 常用路径
-        "/opt/homebrew/bin/node",                            -- M1/M2 Mac 常用路径
-        "/usr/bin/node"                                      -- 系统自带（通常较旧）
-    }
-    -- 遍历路径列表，检查文件是否存在
-    for _, p in ipairs(paths) do
-        if hs.fs.attributes(p) then
-            return p -- 找到存在的路径即返回
-        end
-    end
-    return "node" -- 如果都没找到，尝试直接使用命令名（依赖环境变量）
-end
-
--- 辅助函数：解析快捷键配置
--- 例如输入 "cmd+alt+X" 返回 {"cmd", "alt"}, "X"
-local function parseShortcut(str)
-  if not str or str == "" then
-    return nil, nil
-  end
-
-  local parts = {}
-  for part in string.gmatch(str, "([^+]+)") do
-    -- 去除前后空格
-    local p = part:match("^%s*(.-)%s*$")
-    if p and p ~= "" then
-      table.insert(parts, p)
-    end
-  end
-
-  if #parts < 1 then
-    return nil, nil
-  end
-
-  -- 最后一个部分作为按键，前面的作为修饰键
-  local key = table.remove(parts)
-  local mods = parts
-
-  return mods, key
-end
-
 -- 将快捷键对象存储在模块表 M 中，防止被垃圾回收机制清理导致快捷键失效
 -- 读取配置并绑定快捷键
-local env = loadEnv()
-local mods, key = parseShortcut(env["UPLOAD_SHORTCUT"])
+local env = Utils.loadEnv()
+local mods, key = Utils.parseShortcut(env["UPLOAD_SHORTCUT"])
 
 -- 如果未配置或解析失败，使用默认快捷键 Cmd + Alt + X
 if not mods or not key then
@@ -159,7 +87,7 @@ M.uploadHotkey = hs.hotkey.bind(mods, key, function()
 
   -- 3. 准备执行上传脚本的参数
   local scriptPath = hs.configdir .. "/packages/upload/upload.js"
-  local nodePath = findNodePath()
+  local nodePath = Utils.findNodePath()
 
   -- 4. 创建异步任务执行 Node.js 上传脚本
   local task = hs.task.new(nodePath, function(exitCode, stdOut, stdErr)
