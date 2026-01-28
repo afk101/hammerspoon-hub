@@ -9,12 +9,13 @@ if (!filePath) {
   process.exit(1);
 }
 
-// 检查文件名是否包含中文字符
-// 如果包含中文，让 qcdn 生成安全的文件名 (keepName: false)
-// 否则保留原始文件名 (keepName: true)
+// 检查文件名是否符合允许的字符集
+// 允许的字符：字母、数字、下划线、短横线、斜杠、点
+// 如果符合，保留原始文件名 (keepName: true)
+// 否则让 qcdn 生成安全的文件名 (keepName: false)
 const fileName = path.basename(filePath);
-const hasChinese = /[\u4e00-\u9fa5]/.test(fileName);
-const keepName = !hasChinese;
+const allowedChars = /^[a-zA-Z0-9_\-\/\.]+$/;
+const keepName = allowedChars.test(fileName);
 
 try {
   const res = await qcdn.upload(filePath, {
