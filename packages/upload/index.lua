@@ -114,12 +114,12 @@ M.uploadHotkey = hs.hotkey.bind({"cmd", "alt"}, "X", function()
   -- 1. 获取剪切板中的文件路径
   local filePath = get_file_path_from_clipboard()
   if not filePath then
-    hs.alert.show("Clipboard does not contain a file")
+    hs.alert.show("❌Please check the Clipboard")
     return
   end
 
   -- 2. 显示开始上传的提示
-  hs.alert.show("Uploading: " .. filePath)
+  hs.alert.show("⏳Uploading: " .. filePath)
 
   -- 3. 准备执行上传脚本的参数
   local scriptPath = hs.configdir .. "/packages/upload/upload.js"
@@ -136,15 +136,15 @@ M.uploadHotkey = hs.hotkey.bind({"cmd", "alt"}, "X", function()
       if url and url ~= "" then
           -- 5. 提取成功：将 URL 写入剪切板并提示成功
           hs.pasteboard.setContents(url)
-          hs.alert.show("Upload Success! URL copied.")
+          hs.alert.show("⭐️Upload Success! URL copied.")
       else
           -- 脚本执行成功但没捕获到 URL（可能是输出格式不对）
           print("上传脚本输出: " .. stdOut)
-          hs.alert.show("Upload finished but no URL returned")
+          hs.alert.show("⚠️Upload finished but no URL returned")
       end
     else
       -- 任务失败（ExitCode 非 0）
-      hs.alert.show("Upload Failed")
+      hs.alert.show("❌Upload Failed")
       print("上传错误日志: " .. stdErr)
     end
   end, {scriptPath, filePath}) -- 传递参数：脚本路径和文件路径
