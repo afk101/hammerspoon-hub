@@ -62,11 +62,39 @@ local function get_file_path_from_clipboard()
   return nil
 end
 
+-- 辅助函数：读取 .env 文件配置
+local function loadEnv()
+  local env = {}
+  local envFile = hs.configdir .. "/.env"
+  local f = io.open(envFile, "r")
+  if f then
+    for line in f:lines() do
+      -- 忽略注释和空行
+      if not line:match("^%s*#") and line:match("=") then
+        local key, value = line:match("([^=]+)=(.*)")
+        if key and value then
+          -- 去除可能存在的空白字符和引号
+          key = key:match("^%s*(.-)%s*$")
+          value = value:match("^%s*(.-)%s*$")
+          env[key] = value
+        end
+      end
+    end
+    f:close()
+  end
+  return env
+end
+
 -- 查找系统中 Node.js 可执行文件的路径
 local function findNodePath()
-    -- 定义一组常见的 node 安装路径
+    -- 1. 优先尝试从 .env 文件读取 NODE_PATH
+    local env = loadEnv()
+    if env["NODE_PATH"] and hs.fs.attributes(env["NODE_PATH"]) then
+        return env["NODE_PATH"]
+    end
+
+    -- 2. 尝试常见的默认路径
     local paths = {
-        "/Users/qihoo/.nvm/versions/node/v22.14.0/bin/node", -- 具体的 nvm 版本路径
         "/usr/local/bin/node",                               -- Intel Mac 常用路径
         "/opt/homebrew/bin/node",                            -- M1/M2 Mac 常用路径
         "/usr/bin/node"                                      -- 系统自带（通常较旧）

@@ -1,6 +1,7 @@
 import * as qcdn from '@q/qcdn';
+import path from 'path';
 
-// Get file path from command line args
+// 从命令行参数获取文件路径
 const filePath = process.argv[2];
 
 if (!filePath) {
@@ -8,18 +9,25 @@ if (!filePath) {
   process.exit(1);
 }
 
+// 检查文件名是否包含中文字符
+// 如果包含中文，让 qcdn 生成安全的文件名 (keepName: false)
+// 否则保留原始文件名 (keepName: true)
+const fileName = path.basename(filePath);
+const hasChinese = /[\u4e00-\u9fa5]/.test(fileName);
+const keepName = !hasChinese;
+
 try {
   const res = await qcdn.upload(filePath, {
     https: true,
-    keepName: true,
+    keepName: keepName,
   });
 
-  // The result is an object where key is local path and value is remote URL
-  // Example: { '/path/to/file.png': 'https://url...' }
+  // 返回结果是一个对象，key 是本地路径，value 是远程 URL
+  // 例如: { '/path/to/file.png': 'https://url...' }
   const remoteUrl = res[filePath];
 
   if (remoteUrl) {
-    // Print with markers to make parsing reliable in Lua
+    // 使用标记符打印，便于在 Lua 中可靠地解析
     console.log(`###URL_START###${remoteUrl}###URL_END###`);
   } else {
     console.error('Upload failed or no URL returned');
