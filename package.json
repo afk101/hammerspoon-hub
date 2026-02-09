@@ -1,0 +1,7 @@
+{
+  "name": "hammerspoon-workspace",
+  "private": true,
+  "scripts": {
+    "setup": "pnpm -r run setup"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@hammerspoon/utils",
+  "private": true,
+  "scripts": {
+    "setup": "echo '纯 Lua 包，无需安装依赖'"
+  }
+}
